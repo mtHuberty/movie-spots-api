@@ -32,11 +32,11 @@ type SeatReservation struct {
 	SeatNumber string `json:"seatNumber"`
 }
 
-func NewDB(host, portstring, user, password, database string) (DBIface, error) {
+func NewDB(portstring, host, user, password, database string) (DBIface, error) {
 	port, _ := strconv.Atoi(portstring)
 
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=require",
+		"password=%s dbname=%s sslmode=disable",
 		host, port, user, password, database)
 
 	DB, err := sql.Open("postgres", psqlInfo)
@@ -118,7 +118,7 @@ func (dbc *DatabaseClient) GetSeatReservations(params url.Values) ([]SeatReserva
 
 func (dbc *DatabaseClient) SaveSeatReservations(seatReservations []SeatReservation) ([]SeatReservation, error) {
 
-	sqlStr := `INSERT INTO seat_reservations(theater_id, movie_id, showing_id, seat_row, seat_number) VALUES `
+	sqlStr := `INSERT INTO seat_reservations(theater_id, location_id, showing_id, seat_row, seat_number) VALUES `
 
 	var vals []interface{}
 
