@@ -30,7 +30,7 @@ func init() {
 	isLocal := os.Getenv("GO_ENV") != "nonprod" && os.Getenv("GO_ENV") != "prod"
 
 	if isLocal {
-		log.Infoln("Loading local configuration...")
+		log.Infoln("Loading local environment variables...")
 
 		// Workaround to be able to find .env during tests. https://github.com/joho/godotenv/issues/43
 		re := regexp.MustCompile(`^(.*movie-spots-api)`)

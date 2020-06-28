@@ -42,14 +42,12 @@ func NewDB(portstring, host, user, password, database string) (DBIface, error) {
 	DB, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		return nil, errs.WrapTrace("db", "NewDB", fmt.Errorf("error attempting to connect to our database - %s", err))
-	} else {
-		log.Infoln("sql.Open returned successfully")
 	}
 
 	if err = DB.Ping(); err != nil {
 		return nil, errs.WrapTrace("db", "NewDB", fmt.Errorf("error attempting to verify database connection - %s", err))
 	} else {
-		log.Infoln("Conn.Ping() returned successfully - db is connected and responding.")
+		log.Infoln("Database ping returned successfully - db is connected and responding.")
 	}
 
 	return &DatabaseClient{DB}, nil
