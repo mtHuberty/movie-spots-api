@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -31,7 +32,7 @@ func init() {
 	if isLocal {
 		log.Infoln("Loading local configuration...")
 
-		// Find .env during tests. Workaround from https://github.com/joho/godotenv/issues/43
+		// Workaround to be able to find .env during tests. https://github.com/joho/godotenv/issues/43
 		re := regexp.MustCompile(`^(.*movie-spots-api)`)
 		cwd, _ := os.Getwd()
 		rootPath := re.Find([]byte(cwd))
@@ -42,18 +43,28 @@ func init() {
 			log.Fatal(errs.WrapTrace("config", "init", fmt.Errorf("Error loading .env file - %s", err)))
 		}
 	}
-}
 
-func initDB(postgresSecrets map[string]string, isLocal bool) (db.DBIface, error) {
-	portstring := postgresSecrets["port"]
-	// override the pg port if we are running locally and using the tunnel
-	// to connect to the db.
-	if pgPort := os.Getenv("POSTGRES_PORT"); pgPort != "" && isLocal {
-		log.Infof("Using local config for pg_port: %s \n", pgPort)
-		portstring = pgPort
+	port := os.Getenv("POSTGRES_PORT")
+	host := os.Getenv("POSTGRES_HOST")
+	user := os.Getenv("POSTGRES_USER")
+	password := os.Getenv("POSTGRES_PASSWORD")
+	database := os.Getenv("POSTGRES_DATABASE")
+
+	dbc, err := initDB(port, host, user, password, database)
+	if err != nil {
+		log.Fatal(errs.WrapTrace("config", "init", err))
 	}
 
-	dbc, err := db.NewDB(postgresSecrets["host"], portstring, postgresSecrets["user"], postgresSecrets["password"], postgresSecrets["database"])
+	AppConfig.DBClient = dbc
+
+	if AppConfig.DBClient == nil {
+		log.Fatal(errs.WrapTrace("config", "init", errors.New("Failed to initialize client, DBClient is nil")))
+	}
+}
+
+func initDB(port, host, user, password, database string) (db.DBIface, error) {
+
+	dbc, err := db.NewDB(port, host, user, password, database)
 	if err != nil {
 		return nil, errs.WrapTrace("config", "initDB", err)
 	}
